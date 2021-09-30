@@ -1,4 +1,9 @@
+# -tc- évite de nommer un module functions.py. Un module contient forcément des
+# -tc- des fonctions (ou devrait). Ce n'est donc pas très descriptif
+
 import requests
+# -tc- Evite de raccourcir le nom BeautifulSoup par bs. BeautifulSoup est une classe
+# -tc- et DOIT avoir un nom qui commence par une majuscule
 from bs4 import BeautifulSoup as bs
 
 main_url = 'http://books.toscrape.com/'
@@ -7,6 +12,7 @@ main_url = 'http://books.toscrape.com/'
 def get_parsed(url):
     """Fonction pour appeler et analyser une page du site"""
     response = requests.get(url)
+    # -tc- TODO: gérer les erreurs !
     soup = bs(response.content, 'html.parser')
     return soup
 
