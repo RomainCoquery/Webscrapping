@@ -1,6 +1,8 @@
+import os.path
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import csv
 
 
 main_url = 'http://books.toscrape.com/'
@@ -9,8 +11,8 @@ main_url = 'http://books.toscrape.com/'
 def get_parsed(url):
     """Fonction pour appeler et analyser une page du site"""
     response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    return soup
+    if response.ok:
+        return BeautifulSoup(response.content, 'html.parser')
 
 
 def get_categories_urls(url):
@@ -23,7 +25,7 @@ def get_categories_urls(url):
 
 def get_pages_for_category(category_url):
     """Récupération de toutes les pages des catégories du site"""
-    category_page_url = []
+    category_page_url = [category_url]
     next_button = get_parsed(category_url).find('li', class_='next')
     while next_button:
         page = urljoin(category_url, (next_button.find('a')['href']))
@@ -32,10 +34,9 @@ def get_pages_for_category(category_url):
     return category_page_url
 
 
-def get_books_urls_for_page(category_page_url, book_urls=None):
+def get_books_urls_for_page(category_page_url):
     """Récupération des liens des pages dans les catégories"""
-    if book_urls is None:
-        book_urls = []
+    book_urls = []
     category_page = get_parsed(category_page_url)
     for element in category_page.find_all('h3'):
         book_urls.append(urljoin(category_page_url, element.a.get('href')))
@@ -50,12 +51,15 @@ def get_book_data(books_url):
     title = soup.find("div", class_="product_main").find("h1").text
     category = soup.find("ul", class_="breadcrumb").find_all("a")
     category = category[2].text
-    product_description = (soup.find("article", class_="product_page").find("p", recursive=False)
-                           .text)
+    product_description = soup.find("article", class_="product_page").find("p", recursive=False)
+    # gestion des livres qui n ont pas de description
     if product_description is not None:
-        product_description = product_description
+        product_description = product_description.text
     img = soup.find("div", class_="thumbnail").find("img")
     img_url = urljoin(main_url, img['src'])
+    # renommage du titre des images pour correspondre aux limitations des os
+    img_name_str = title.lower()[:255]
+    img_name = ''.join(x for x in img_name_str if x.isalnum() or x in ' ').replace(' ', '-')
     product_info = soup.find_all("td")
     universal_product_code = product_info[0].text
     price_excluding_tax = product_info[2].text
@@ -68,6 +72,7 @@ def get_book_data(books_url):
         'title': title,
         'category': category,
         'img_url': img_url,
+        'img_name': img_name,
         'universal_product_code': universal_product_code,
         'price_excluding_tax': price_excluding_tax,
         'price_including_tax': price_including_tax,
@@ -75,3 +80,45 @@ def get_book_data(books_url):
         'review_rating': review_rating,
         'product_description': product_description,
     }
+
+
+def get_book_image(img_url, destination, filename):
+    """Récupération des images et écriture dans un dossier image de la catégorie"""
+    response = requests.get(img_url)
+    file = open(destination + filename + '.jpg', "wb")
+    file.write(response.content)
+    file.close()
+
+
+def main():
+    for category_url, category_name in get_categories_urls(main_url):
+        print(f'récupération de la catégorie {category_name}')
+        # Création du dossier webscrapping
+        if not os.path.exists('webscrapping'):
+            os.mkdir('webscrapping')
+        # création de dossier par catégorie
+        path_category = 'webscrapping/' + category_name
+        if not os.path.exists('webscrapping/' + category_name):
+            os.mkdir('webscrapping/' + category_name)
+        # création du dossier image par catégorie
+        if not os.path.exists('webscrapping/' + category_name + '/img'):
+            os.mkdir('webscrapping/' + category_name + '/img')
+        # création de fichiers csv avec les noms de colonnes pour chaque catégorie
+        with open(f"{path_category}/{category_name}.csv", 'w',
+                  encoding='utf-8-sig', newline='') as file:
+            fieldnames = ['product_page_url', 'title', 'category', 'img_url', 'img_name',
+                          'universal_product_code', 'price_excluding_tax', 'price_including_tax',
+                          'number_available', 'review_rating', 'product_description']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for category_page in get_pages_for_category(category_url):
+                for book_url in get_books_urls_for_page(category_page):
+                    # scrapping des données et des images dans chaque catégorie
+                    book_data = get_book_data(book_url)
+                    writer.writerow(book_data)
+                    (get_book_image(book_data['img_url'], 'webscrapping/' + category_name + '/img/',
+                                    book_data['img_name']))
+
+
+if __name__ == "__main__":
+    main()
