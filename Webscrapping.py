@@ -1,22 +1,23 @@
 import requests
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
 main_url = 'http://books.toscrape.com/'
+books_url = 'https://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html'
 
 
 def get_parsed(url):
     """Fonction pour appeler et analyser une page du site"""
     response = requests.get(url)
-    soup = bs(response.content, 'html.parser')
+    soup = BeautifulSoup(response.content, 'html.parser')
     return soup
 
 
 def get_categories_urls(url):
     """Récupération des liens de chaque catégorie"""
     category_url = []
-    for list_url in get_parsed(url).find('ul', class_="nav").find_all('a', href=True):
-        category_url.append([url + list_url['href'], list_url.text.strip()])
-    category_url.pop(0)
+    for list_url in get_parsed(url).find_all('ul')[2].find_all('a', href=True):
+        category_url.append([urljoin(url, list_url['href']), list_url.text.strip()])
     return category_url
 
 
@@ -31,59 +32,39 @@ def get_category_pages(category_url):
 
 
 def get_pages_for_category(url):
+    """Récupération de toutes les pages des catégories du site"""
     categories_url = []
     for list_url in get_parsed(url).find('ul', class_="nav").find_all('a', href=True):
-        category_url = main_url + list_url['href']
+        category_url = urljoin(main_url, list_url['href'])
         next_button = get_parsed(category_url).find('li', class_='next')
         while next_button:
-            page = category_url.replace('index.html', '') + (next_button.find('a')['href'])
+            page = urljoin(category_url, (next_button.find('a')['href']))
             next_button = get_parsed(page).find('li', class_='next')
             categories_url.append(page)
-            continue
     return categories_url
-
-
-def product_rating(star):
-    """Fonction pour avoir le nombre d etoiles d avis"""
-    if "Zero" in star:
-        star = 0
-    elif "One" in star:
-        star = 1
-    elif "Two" in star:
-        star = 2
-    elif "Three" in star:
-        star = 3
-    elif "Four" in star:
-        star = 4
-    elif "Five" in star:
-        star = 5
-    else:
-        star = None
-    return star
 
 
 def product_book(book_url):
     """Récupérer les données d un livre"""
+    star_rating = {'zero': '0', 'One': '1', 'Two': '2', 'Three': '3', 'Four': '4', 'Five': '5'}
     soup = get_parsed(book_url)
     product_page_url = book_url
     title = soup.find("div", class_="product_main").find("h1").text
     category = soup.find("ul", class_="breadcrumb").find_all("a")
     category = category[2].text
-    product_description = soup.find("article", class_="product_page").find("p", recursive=False)\
-        .text
-    try:
+    product_description = (soup.find("article", class_="product_page").find("p", recursive=False)
+                           .text)
+    if product_description is not None:
         product_description = product_description
-    except AttributeError:
-        product_description = ''
     img = soup.find("div", class_="thumbnail").find("img")
-    img_url = img['src'].replace('../../', main_url)
+    img_url = urljoin(main_url, img['src'])
     product_info = soup.find("table", class_="table-striped").find_all("td")
     universal_product_code = product_info[0].text
     price_excluding_tax = product_info[2].text
     price_including_tax = product_info[3].text
     stock = product_info[5].text
     number_available = stock.replace("In stock (", "").replace(" available)", "")
-    review_rating = product_rating(str(soup.find("p", class_="star-rating")))
+    review_rating = star_rating[soup.find(class_="star-rating")['class'][1]]
     return {
         'product_page_url': product_page_url,
         'title': title,
@@ -98,7 +79,12 @@ def product_book(book_url):
     }
 
 
-# print(get_categories_urls(main_url))
-# print(get_category_pages(main_url))
-print(get_pages_for_category(main_url))
-# print(product_book(book))
+def main():
+    print(get_categories_urls(main_url))
+    print(get_category_pages(main_url))
+    print(get_pages_for_category(main_url))
+    print(product_book(books_url))
+
+
+if __name__ == "__main__":
+    print(product_book(books_url))
