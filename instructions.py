@@ -1,3 +1,5 @@
+# -tc- Quelle différence avec final.py ?
+
 import requests
 from bs4 import BeautifulSoup as bs
 
