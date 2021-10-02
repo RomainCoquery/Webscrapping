@@ -2,8 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+
 main_url = 'http://books.toscrape.com/'
-books_url = 'https://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html'
 
 
 def get_parsed(url):
@@ -21,34 +21,32 @@ def get_categories_urls(url):
     return category_url
 
 
-def get_category_pages(category_url):
-    """Récupération des liens des pages dans les catégories"""
-    for categories_url, category_name in get_categories_urls(main_url):
-        category_page = get_parsed(category_url)
-        for element in category_page.find_all('h3'):
-            print('http://books.toscrape.com/catalogue/' + element.a.get('href')
-                  .replace('../../../', ''))
-    return categories_url
-
-
-def get_pages_for_category(url):
+def get_pages_for_category(category_url):
     """Récupération de toutes les pages des catégories du site"""
-    categories_url = []
-    for list_url in get_parsed(url).find('ul', class_="nav").find_all('a', href=True):
-        category_url = urljoin(main_url, list_url['href'])
-        next_button = get_parsed(category_url).find('li', class_='next')
-        while next_button:
-            page = urljoin(category_url, (next_button.find('a')['href']))
-            next_button = get_parsed(page).find('li', class_='next')
-            categories_url.append(page)
-    return categories_url
+    category_page_url = []
+    next_button = get_parsed(category_url).find('li', class_='next')
+    while next_button:
+        page = urljoin(category_url, (next_button.find('a')['href']))
+        next_button = get_parsed(page).find('li', class_='next')
+        category_page_url.append(page)
+    return category_page_url
 
 
-def product_book(book_url):
+def get_books_urls_for_page(category_page_url, book_urls=None):
+    """Récupération des liens des pages dans les catégories"""
+    if book_urls is None:
+        book_urls = []
+    category_page = get_parsed(category_page_url)
+    for element in category_page.find_all('h3'):
+        book_urls.append(urljoin(category_page_url, element.a.get('href')))
+    return book_urls
+
+
+def get_book_data(books_url):
     """Récupérer les données d un livre"""
     star_rating = {'zero': '0', 'One': '1', 'Two': '2', 'Three': '3', 'Four': '4', 'Five': '5'}
-    soup = get_parsed(book_url)
-    product_page_url = book_url
+    soup = get_parsed(books_url)
+    product_page_url = books_url
     title = soup.find("div", class_="product_main").find("h1").text
     category = soup.find("ul", class_="breadcrumb").find_all("a")
     category = category[2].text
@@ -58,7 +56,7 @@ def product_book(book_url):
         product_description = product_description
     img = soup.find("div", class_="thumbnail").find("img")
     img_url = urljoin(main_url, img['src'])
-    product_info = soup.find("table", class_="table-striped").find_all("td")
+    product_info = soup.find_all("td")
     universal_product_code = product_info[0].text
     price_excluding_tax = product_info[2].text
     price_including_tax = product_info[3].text
@@ -77,14 +75,3 @@ def product_book(book_url):
         'review_rating': review_rating,
         'product_description': product_description,
     }
-
-
-def main():
-    print(get_categories_urls(main_url))
-    print(get_category_pages(main_url))
-    print(get_pages_for_category(main_url))
-    print(product_book(books_url))
-
-
-if __name__ == "__main__":
-    print(product_book(books_url))
