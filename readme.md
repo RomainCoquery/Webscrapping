@@ -1,4 +1,4 @@
-***Note: This project is realized during my training at [OpenClassrooms](https://openclassrooms.com/fr/).***
+***Note: ce projet est réalisé pendant ma formation [OpenClassrooms](https://openclassrooms.com/fr/).***
 
 # Webscrapping
 ### Ce script permet de récupérer les données du site [Books to Scrape](http://books.toscrape.com/) dans un fichier csv.
