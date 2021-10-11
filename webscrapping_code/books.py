@@ -1,4 +1,4 @@
-from parse import get_parsed
+from webscrapping_code.parse import get_parsed
 import requests
 from urllib.parse import urljoin
 

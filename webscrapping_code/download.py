@@ -1,5 +1,6 @@
-from category import (get_categories_urls, get_pages_for_category,
-                      get_books_urls_for_page)
+from webscrapping_code.category import (get_categories_urls,
+                                        get_pages_for_category,
+                                        get_books_urls_for_page)
 from books import get_book_data, get_book_image
 import os.path
 import csv

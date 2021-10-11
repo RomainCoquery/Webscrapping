@@ -23,6 +23,6 @@ black {webscrapping_code}
 ```
 #### Lancer le script
 ```
-python -m __main__.py
+python -m webscrapping_code
 ```
 Les données sont enregistrées dans le sous dossier ***webscrapping*** du répertoire ***webscrapping_code***.

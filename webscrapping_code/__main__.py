@@ -1,4 +1,4 @@
-from download import main
+from webscrapping_code.download import main
 
 
 if __name__ == "__main__":
