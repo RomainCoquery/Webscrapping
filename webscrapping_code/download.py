@@ -11,16 +11,16 @@ main_url = 'http://books.toscrape.com/'
 def main():
     for category_url, category_name in get_categories_urls(main_url):
         print(f'récupération de la catégorie {category_name}')
-        # Création du dossier webscrapping
-        if not os.path.exists('webscrapping'):
-            os.mkdir('webscrapping')
+        # Création du dossier webscrapping_code
+        if not os.path.exists('webscrapping_code'):
+            os.mkdir('webscrapping_code')
         # création de dossier par catégorie
-        path_category = 'webscrapping/' + category_name
-        if not os.path.exists('webscrapping/' + category_name):
-            os.mkdir('webscrapping/' + category_name)
+        path_category = 'webscrapping_code/' + category_name
+        if not os.path.exists('webscrapping_code/' + category_name):
+            os.mkdir('webscrapping_code/' + category_name)
         # création du dossier image par catégorie
-        if not os.path.exists('webscrapping/' + category_name + '/img'):
-            os.mkdir('webscrapping/' + category_name + '/img')
+        if not os.path.exists('webscrapping_code/' + category_name + '/img'):
+            os.mkdir('webscrapping_code/' + category_name + '/img')
         # création fichiers csv avec les noms de colonnes pour chaque catégorie
         with open(f"{path_category}/{category_name}.csv", 'w',
                   encoding='utf-8-sig', newline='') as file:
@@ -36,6 +36,6 @@ def main():
                     # scrapping des données et des images dans chaque catégorie
                     book_data = get_book_data(book_url)
                     writer.writerow(book_data)
-                    (get_book_image(book_data['img_url'], 'webscrapping/' +
+                    (get_book_image(book_data['img_url'], 'webscrapping_code/' +
                                     category_name + '/img/',
                                     book_data['img_name']))
