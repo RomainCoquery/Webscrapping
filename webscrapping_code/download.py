@@ -37,6 +37,6 @@ def main():
                     # scrapping des données et des images dans chaque catégorie
                     book_data = get_book_data(book_url)
                     writer.writerow(book_data)
-                    (get_book_image(book_data['img_url'], 'webscrapping_code/' +
-                                    category_name + '/img/',
+                    (get_book_image(book_data['img_url'], 'webscrapping_code/'
+                                    + category_name + '/img/',
                                     book_data['img_name']))
