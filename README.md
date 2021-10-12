@@ -13,13 +13,12 @@ source .venv/bin/activate
 ```
 pip install -r requirements.txt
 ```
-#### Optionnel : Valider le code avec flake8(https://flake8.pycqa.org/en/latest/) et black(https://github.com/psf/black)
+#### Valider le code avec flake8(https://flake8.pycqa.org/en/latest/) et black(https://github.com/psf/black)
 ```
 #pour flake8 :
-pip install flake8
 flake8 webscrapping_code
 #pour black
-black {webscrapping_code}
+black --check webscrapping_code
 ```
 #### Lancer le script
 ```
