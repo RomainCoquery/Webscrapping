@@ -16,7 +16,7 @@ pip install -r requirements.txt
 #### Valider le code avec flake8(https://flake8.pycqa.org/en/latest/) et black(https://github.com/psf/black)
 ```
 #pour flake8 :
-flake8 webscrapping_code
+flake8 --max-line-length=88 webscrapping_code
 #pour black
 black --check webscrapping_code
 ```
